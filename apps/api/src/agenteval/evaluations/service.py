@@ -177,20 +177,14 @@ async def _custom_metrics_by_id(
     return {m.metric_id: m for m in rows}
 
 
-async def _record_invocation_trace(
-    session: AsyncSession,
-    organization_id: uuid.UUID,
-    run_id: uuid.UUID,
-    test_case_id: uuid.UUID,
-    output: AgentOutput,
-    started_at: datetime,
-    ended_at: datetime,
-) -> uuid.UUID:
-    """Builds a minimal OpenTelemetry GenAI-shaped trace for one agent invocation (one
-    chat span, plus one execute_tool child span per tool call the agent made) and
-    ingests it through the same path an external OTLP exporter would use, so a worker
-    run's trace and an SDK-sent trace are stored identically. Returns the new Trace
-    row's id."""
+def build_invocation_spans(
+    output: AgentOutput, started_at: datetime, ended_at: datetime
+) -> list[SpanIn]:
+    """A minimal OpenTelemetry GenAI-shaped span list for one agent invocation: one chat
+    span, plus one execute_tool child span per tool call the agent made, using the real
+    gen_ai.* attribute namespace (never a bespoke one). Pure and database-free, so the
+    exact attribute mapping a worker run produces is directly unit-testable; the async
+    wrapper below is the only part that touches storage."""
     agent_span_id = uuid.uuid4().hex[:16]
     spans = [
         SpanIn(
@@ -222,6 +216,22 @@ async def _record_invocation_trace(
                 },
             )
         )
+    return spans
+
+
+async def _record_invocation_trace(
+    session: AsyncSession,
+    organization_id: uuid.UUID,
+    run_id: uuid.UUID,
+    test_case_id: uuid.UUID,
+    output: AgentOutput,
+    started_at: datetime,
+    ended_at: datetime,
+) -> uuid.UUID:
+    """Builds the invocation's spans and ingests them through the same path an external
+    OTLP exporter would use, so a worker run's trace and an SDK-sent trace are stored
+    identically. Returns the new Trace row's id."""
+    spans = build_invocation_spans(output, started_at, ended_at)
     trace_out = await traces_service.ingest_trace(
         session,
         organization_id,
