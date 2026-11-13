@@ -66,7 +66,7 @@ export function BenchmarksScreen() {
       ) : (
         <div className="flex flex-col gap-4">
           <Surface className="overflow-hidden">
-            <SurfaceHeader title="Pairwise comparison" description="A regression is flagged automatically beyond the configured threshold (AC8)." />
+            <SurfaceHeader title="Pairwise comparison" description="A regression is flagged automatically beyond the configured threshold." />
             <div className="grid gap-3 px-5 pb-4 sm:grid-cols-2">
               <SimpleSelect
                 value={baselineId}
@@ -120,7 +120,7 @@ export function BenchmarksScreen() {
 
           <Surface className="p-5">
             <h2 className="mb-1 text-[13px] font-semibold text-foreground">Trend across runs</h2>
-            <p className="mb-3 text-[13px] text-muted-foreground">Pick three or more runs to chart each metric over time (AC9).</p>
+            <p className="mb-3 text-[13px] text-muted-foreground">Pick two or more runs to chart each metric over time.</p>
             <div className="mb-4 flex flex-wrap gap-x-4 gap-y-2">
               {completedRuns.map((r) => (
                 <label key={r.id} className="flex items-center gap-1.5 text-[13px] text-foreground">
