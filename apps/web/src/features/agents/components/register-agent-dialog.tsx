@@ -86,7 +86,7 @@ export function RegisterAgentDialog({
         <DialogHeader>
           <DialogTitle>Register an agent</DialogTitle>
           <DialogDescription>
-            Add a version afterward with the adapter's own config (an HTTP endpoint URL or a Python import path).
+            Add a version afterward with the adapter&rsquo;s own config (an HTTP endpoint URL or a Python import path).
             A recorded agent needs no config: its traces are supplied by the SDK at evaluation time.
           </DialogDescription>
         </DialogHeader>

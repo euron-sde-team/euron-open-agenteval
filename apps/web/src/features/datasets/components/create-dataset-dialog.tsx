@@ -106,7 +106,7 @@ export function CreateDatasetDialog({
         <DialogHeader>
           <DialogTitle>Create a dataset</DialogTitle>
           <DialogDescription>
-            Paste test cases as a JSON array. Add or edit cases later from the dataset's own page, which
+            Paste test cases as a JSON array. Add or edit cases later from the dataset&rsquo;s own page, which
             creates a new version rather than changing this one.
           </DialogDescription>
         </DialogHeader>

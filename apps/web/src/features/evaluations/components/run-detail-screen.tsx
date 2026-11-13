@@ -113,7 +113,7 @@ export function RunDetailScreen({ runId }: { runId: string }) {
       />
       {data.status === "pending_traces" && (
         <div className="mb-4 rounded-lg bg-warning-soft px-3.5 py-2.5 text-[13px] text-warning">
-          This run uses a recorded agent: it waits for the SDK to push every test case's trace, then needs an
+          This run uses a recorded agent: it waits for the SDK to push every test case&rsquo;s trace, then needs an
           explicit activate before a worker can score it.
         </div>
       )}

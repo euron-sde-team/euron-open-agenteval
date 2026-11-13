@@ -53,13 +53,3 @@ export function initials(name: string | null | undefined): string {
   const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
   return (first + last).toUpperCase() || "?";
 }
-
-/** "aws-access-key-id" becomes "AWS access key id". */
-export function formatRuleId(ruleId: string): string {
-  const upper = new Set(["aws", "gcp", "pem", "id", "api", "url", "jwt", "sarif"]);
-  return ruleId
-    .split("-")
-    .map((word) => (upper.has(word) ? word.toUpperCase() : word))
-    .join(" ")
-    .replace(/^./, (c) => c.toUpperCase());
-}

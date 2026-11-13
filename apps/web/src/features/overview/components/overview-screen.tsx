@@ -78,7 +78,7 @@ export function OverviewScreen() {
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="surface lg:col-span-2 p-5">
             <h2 className="text-[13px] font-semibold text-foreground">
-              Latest run's metrics
+              Latest run&rsquo;s metrics
               {latestCompleted && (
                 <span className="ml-2 font-normal text-muted-foreground">
                   ({formatRelative(latestCompleted.finished_at)})
