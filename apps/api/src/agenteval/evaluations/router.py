@@ -30,6 +30,17 @@ async def queue_run(
     )
 
 
+@router.post(
+    "/api/v1/orgs/{org_id}/evaluation-runs/{run_id}/activate",
+    response_model=EvaluationRunOut,
+    summary="Make a pending (recorded-adapter) run claimable, once its traces are pushed",
+)
+async def activate_run(
+    org_id: uuid.UUID, run_id: uuid.UUID, actor: Member, session: SessionDep
+) -> EvaluationRunOut:
+    return await service.activate_pending_run(session, org_id, run_id, actor)
+
+
 @router.get(
     "/api/v1/orgs/{org_id}/evaluation-runs",
     response_model=list[EvaluationRunOut],

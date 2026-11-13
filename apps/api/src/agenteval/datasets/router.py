@@ -72,3 +72,14 @@ async def create_dataset_version(
     session: SessionDep,
 ) -> DatasetVersionOut:
     return await service.create_dataset_version(session, org_id, dataset_id, body.test_cases, actor)
+
+
+@router.get(
+    "/api/v1/orgs/{org_id}/dataset-versions/{dataset_version_id}/test-cases",
+    response_model=list[TestCaseOut],
+    summary="Test cases for one explicit dataset version (not necessarily the current one)",
+)
+async def list_test_cases_for_version(
+    org_id: uuid.UUID, dataset_version_id: uuid.UUID, _: Viewer, session: SessionDep
+) -> list[TestCaseOut]:
+    return await service.get_test_cases_for_version(session, org_id, dataset_version_id)

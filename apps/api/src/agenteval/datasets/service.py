@@ -173,6 +173,25 @@ async def list_test_cases(
     ]
 
 
+async def get_test_cases_for_version(
+    session: AsyncSession, organization_id: uuid.UUID, dataset_version_id: uuid.UUID
+) -> list[TestCaseOut]:
+    """Unlike ``list_test_cases`` (the dataset's CURRENT version, reached through
+    ``get_dataset``), this resolves an explicit ``dataset_version_id``, the one an
+    EvaluationRun actually references, which is not necessarily the dataset's current
+    version once a later edit has created a newer one (AC10). A caller (the SDK's
+    recorded-adapter path, pushing traces for a run that already has a fixed version) is
+    the reason this exists: it needs the exact test cases the run itself was queued
+    against, not whatever the dataset looks like now."""
+    version = await session.get(DatasetVersion, dataset_version_id)
+    if version is None:
+        raise NotFoundError("Dataset version not found")
+    dataset = await session.get(Dataset, version.dataset_id)
+    if dataset is None or dataset.organization_id != organization_id:
+        raise NotFoundError("Dataset version not found")
+    return await list_test_cases(session, dataset_version_id)
+
+
 async def resolve_test_cases(
     session: AsyncSession, dataset_version_id: uuid.UUID
 ) -> list[ResolvedTestCase]:

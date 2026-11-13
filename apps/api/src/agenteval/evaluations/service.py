@@ -41,6 +41,7 @@ from agenteval.evaluators.schema import (
     ExpectedBehavior,
     MetricResult,
     RunMetricSummary,
+    ToolCall,
 )
 from agenteval.traces import service as traces_service
 from agenteval.traces.schemas import SpanIn
@@ -106,16 +107,43 @@ async def queue_run(
     metric_ids: list[str],
     actor: Actor,
 ) -> EvaluationRunOut:
+    # A ``recorded`` adapter agent has nothing live to invoke: the caller (the SDK, see
+    # sdk/python's client) must push a trace for every test case before a worker can
+    # score anything. Starting such a run as "pending_traces" rather than "queued" keeps
+    # claim_next_run's query (WHERE status = 'queued') from racing a worker's 2s idle
+    # poll against the SDK still pushing traces; activate_pending_run below is the only
+    # way a "pending_traces" run becomes claimable.
+    agent_version = await session.get(AgentVersion, agent_version_id)
+    agent = await session.get(Agent, agent_version.agent_id) if agent_version else None
+    is_recorded = agent is not None and agent.adapter_type == "recorded"
+    initial_status = "pending_traces" if is_recorded else "queued"
     run = EvaluationRun(
         organization_id=organization_id,
         agent_version_id=agent_version_id,
         dataset_version_id=dataset_version_id,
         metric_ids=metric_ids,
+        status=initial_status,
     )
     session.add(run)
     await session.flush()
     audit(session, actor, "evaluation_run.queued", "evaluation_run", run.id, metric_ids=metric_ids)
     await session.commit()
+    return _run_out(run)
+
+
+async def activate_pending_run(
+    session: AsyncSession, organization_id: uuid.UUID, run_id: uuid.UUID, actor: Actor
+) -> EvaluationRunOut:
+    """Transitions a ``recorded`` adapter run from "pending_traces" to "queued", once
+    the caller has pushed every test case's trace (see queue_run's docstring). A run not
+    in "pending_traces" is left untouched rather than erroring, so calling this twice,
+    or on an ``http``/``python`` run that was never pending in the first place, is
+    always safe."""
+    run = await get_run(session, organization_id, run_id)
+    if run.status == "pending_traces":
+        run.status = "queued"
+        audit(session, actor, "evaluation_run.activated", "evaluation_run", run.id)
+        await session.commit()
     return _run_out(run)
 
 
@@ -217,6 +245,38 @@ def build_invocation_spans(
             )
         )
     return spans
+
+
+async def _recorded_output_for_test_case(
+    session: AsyncSession, organization_id: uuid.UUID, run_id: uuid.UUID, test_case_id: uuid.UUID
+) -> AgentOutput | None:
+    """Reverses build_invocation_spans's attribute mapping, for a ``recorded`` adapter
+    agent: the caller (the SDK, see sdk/python's client) must have already pushed a
+    trace for this run and test case through POST /api/v1/orgs/{org_id}/traces before
+    the worker claims the run, since a recorded adapter has nothing live to invoke.
+    Returns None if no trace was pushed yet, so the caller can fail the run with a clear
+    "no recorded output supplied" error instead of a confusing crash deeper in."""
+    trace = await traces_service.get_trace_for_run_and_case(
+        session, organization_id, run_id, test_case_id
+    )
+    if trace is None:
+        return None
+    chat_span = next((s for s in trace.spans if s.gen_ai_operation_name == "chat"), None)
+    if chat_span is None:
+        return None
+    tool_calls = tuple(
+        ToolCall(
+            name=str(s.attributes.get("gen_ai.tool.name", "")),
+            arguments=dict(s.attributes.get("gen_ai.tool.call.arguments", {}) or {}),
+        )
+        for s in trace.spans
+        if s.gen_ai_operation_name == "execute_tool"
+    )
+    return AgentOutput(
+        text=str(chat_span.attributes.get("gen_ai.response.text", "")),
+        tool_calls=tool_calls,
+        provider=chat_span.attributes.get("gen_ai.provider.name", "other"),
+    )
 
 
 async def _record_invocation_trace(
@@ -347,21 +407,44 @@ async def run_evaluation(
 
     try:
         for test_case in test_cases:
-            adapter = build_adapter(agent, agent_version, http)
-            started_at = traces_service.utcnow()
-            try:
-                output = await adapter.invoke(test_case.input)
-            except AdapterError as exc:
-                run.status = "failed"
-                run.error = str(exc)
-                run.finished_at = traces_service.utcnow()
-                await session.commit()
-                return _run_out(run)
-            ended_at = traces_service.utcnow()
+            if agent.adapter_type == "recorded":
+                # Nothing live to invoke: the caller (the SDK) must already have
+                # pushed a trace for this run and test case before the worker claimed
+                # it. The trace already exists, so it is reused directly rather than
+                # recorded a second time (see _record_invocation_trace below).
+                output = await _recorded_output_for_test_case(
+                    session, run.organization_id, run.id, test_case.id
+                )
+                if output is None:
+                    run.status = "failed"
+                    run.error = (
+                        f"no recorded output was pushed for test case {test_case.id} "
+                        "before this run was claimed"
+                    )
+                    run.finished_at = traces_service.utcnow()
+                    await session.commit()
+                    return _run_out(run)
+                trace = await traces_service.get_trace_for_run_and_case(
+                    session, run.organization_id, run.id, test_case.id
+                )
+                assert trace is not None  # just confirmed above
+                trace_id: uuid.UUID = trace.id
+            else:
+                adapter = build_adapter(agent, agent_version, http)
+                started_at = traces_service.utcnow()
+                try:
+                    output = await adapter.invoke(test_case.input)
+                except AdapterError as exc:
+                    run.status = "failed"
+                    run.error = str(exc)
+                    run.finished_at = traces_service.utcnow()
+                    await session.commit()
+                    return _run_out(run)
+                ended_at = traces_service.utcnow()
+                trace_id = await _record_invocation_trace(
+                    session, run.organization_id, run.id, test_case.id, output, started_at, ended_at
+                )
 
-            trace_id = await _record_invocation_trace(
-                session, run.organization_id, run.id, test_case.id, output, started_at, ended_at
-            )
             await _score_one_test_case(
                 session, run, test_case, output, trace_id, judge, judge_config, custom_metrics
             )
