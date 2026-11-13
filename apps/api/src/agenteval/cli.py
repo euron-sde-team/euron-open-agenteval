@@ -104,6 +104,12 @@ def _openapi(_: argparse.Namespace) -> None:
     sys.stdout.write(to_yaml(spec()))
 
 
+def _seed_demo(_: argparse.Namespace) -> None:
+    from agenteval.demo.seed import run
+
+    asyncio.run(run())
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="agenteval", description="Euron Open AgentEval")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -128,8 +134,9 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--name", default="Owner")
     p.set_defaults(fn=_owner)
 
-    # seed-demo is added once the agents/datasets/evaluations domains exist to seed
-    # (a later phase); see docs/PLAN.md's AC14.
+    sub.add_parser(
+        "seed-demo", help="seed a realistic organization, agent and evaluation history"
+    ).set_defaults(fn=_seed_demo)
 
     args = parser.parse_args(argv)
     args.fn(args)
