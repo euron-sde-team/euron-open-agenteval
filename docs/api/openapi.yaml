@@ -1,0 +1,2330 @@
+openapi: 3.1.0
+info:
+  title: Euron Open AgentEval
+  description: '
+
+    Score how well an AI agent completed a task, trace exactly how it got there, and track
+
+    whether a new model or prompt version made things better or worse.
+
+
+    Every endpoint is under `/api/v1`, available to the dashboard with a session cookie and to
+
+    automation with an organization API key.
+
+    '
+  version: 0.1.0
+paths:
+  /api/v1/auth/login:
+    post:
+      tags:
+      - auth
+      summary: Sign in to the dashboard
+      operationId: login_api_v1_auth_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/logout:
+    post:
+      tags:
+      - auth
+      summary: Sign out
+      operationId: logout_api_v1_auth_logout_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+  /api/v1/auth/me:
+    get:
+      tags:
+      - auth
+      summary: The signed-in user
+      operationId: me_api_v1_auth_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+  /api/v1/auth/password:
+    post:
+      tags:
+      - auth
+      summary: Change your password
+      operationId: password_api_v1_auth_password_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs:
+    get:
+      tags:
+      - orgs
+      summary: Organizations you belong to
+      operationId: list_my_organizations_api_v1_orgs_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/OrganizationOut'
+                type: array
+                title: Response List My Organizations Api V1 Orgs Get
+    post:
+      tags:
+      - orgs
+      summary: Create an organization
+      operationId: create_organization_api_v1_orgs_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationCreate'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}:
+    get:
+      tags:
+      - orgs
+      summary: One organization
+      operationId: get_organization_api_v1_orgs__org_id__get
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/members:
+    get:
+      tags:
+      - orgs
+      summary: Members of this organization
+      operationId: list_organization_members_api_v1_orgs__org_id__members_get
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MembershipOut'
+                title: Response List Organization Members Api V1 Orgs  Org Id  Members Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - orgs
+      summary: Invite a member
+      operationId: invite_member_api_v1_orgs__org_id__members_post
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberInvite'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembershipOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/members/{user_id}:
+    patch:
+      tags:
+      - orgs
+      summary: Change a member's role
+      operationId: update_member_role_api_v1_orgs__org_id__members__user_id__patch
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: User Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberRoleUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembershipOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - orgs
+      summary: Remove a member
+      operationId: remove_member_api_v1_orgs__org_id__members__user_id__delete
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: User Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/api-keys:
+    get:
+      tags:
+      - api-keys
+      summary: API keys for this organization
+      operationId: list_keys_api_v1_orgs__org_id__api_keys_get
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: include_revoked
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Include Revoked
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApiKeyOut'
+                title: Response List Keys Api V1 Orgs  Org Id  Api Keys Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - api-keys
+      summary: Create an API key
+      operationId: create_key_api_v1_orgs__org_id__api_keys_post
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiKeyIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyCreated'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/api-keys/{key_id}:
+    delete:
+      tags:
+      - api-keys
+      summary: Revoke an API key
+      operationId: revoke_key_api_v1_orgs__org_id__api_keys__key_id__delete
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: key_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Key Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/audit-log:
+    get:
+      tags:
+      - audit
+      summary: This organization's audit log
+      operationId: list_audit_log_api_v1_orgs__org_id__audit_log_get
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 100
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLogOut'
+                title: Response List Audit Log Api V1 Orgs  Org Id  Audit Log Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /healthz:
+    get:
+      tags:
+      - system
+      summary: Liveness
+      operationId: healthz_healthz_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Healthz Healthz Get
+  /readyz:
+    get:
+      tags:
+      - system
+      summary: 'Readiness: Postgres and Redis reachable'
+      operationId: readyz_readyz_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Readyz Readyz Get
+  /api/v1/orgs/{org_id}/agents:
+    post:
+      tags:
+      - agents
+      summary: Register an agent
+      operationId: register_agent_api_v1_orgs__org_id__agents_post
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - agents
+      summary: Agents in this organization
+      operationId: list_agents_api_v1_orgs__org_id__agents_get
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentOut'
+                title: Response List Agents Api V1 Orgs  Org Id  Agents Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/agents/{agent_id}/versions:
+    post:
+      tags:
+      - agents
+      summary: Register a new version of an agent
+      operationId: create_agent_version_api_v1_orgs__org_id__agents__agent_id__versions_post
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: agent_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Agent Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentVersionIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentVersionOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - agents
+      summary: Versions of this agent
+      operationId: list_agent_versions_api_v1_orgs__org_id__agents__agent_id__versions_get
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: agent_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Agent Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentVersionOut'
+                title: Response List Agent Versions Api V1 Orgs  Org Id  Agents  Agent Id  Versions Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/datasets:
+    post:
+      tags:
+      - datasets
+      summary: Create a dataset
+      operationId: create_dataset_api_v1_orgs__org_id__datasets_post
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetCreate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - datasets
+      summary: Datasets for this organization
+      operationId: list_datasets_api_v1_orgs__org_id__datasets_get
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DatasetOut'
+                title: Response List Datasets Api V1 Orgs  Org Id  Datasets Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/datasets/{dataset_id}:
+    get:
+      tags:
+      - datasets
+      summary: One dataset
+      operationId: get_dataset_api_v1_orgs__org_id__datasets__dataset_id__get
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: dataset_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Dataset Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/datasets/{dataset_id}/test-cases:
+    get:
+      tags:
+      - datasets
+      summary: The dataset's current version's test cases
+      operationId: list_test_cases_api_v1_orgs__org_id__datasets__dataset_id__test_cases_get
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: dataset_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Dataset Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TestCaseOut'
+                title: Response List Test Cases Api V1 Orgs  Org Id  Datasets  Dataset Id  Test Cases
+                  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/datasets/{dataset_id}/versions:
+    post:
+      tags:
+      - datasets
+      summary: Replace this dataset's test cases, creating a new version (AC10)
+      operationId: create_dataset_version_api_v1_orgs__org_id__datasets__dataset_id__versions_post
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: dataset_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Dataset Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetVersionUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetVersionOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/dataset-versions/{dataset_version_id}/test-cases:
+    get:
+      tags:
+      - datasets
+      summary: Test cases for one explicit dataset version (not necessarily the current one)
+      operationId: list_test_cases_for_version_api_v1_orgs__org_id__dataset_versions__dataset_version_id__test_cases_get
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: dataset_version_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Dataset Version Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TestCaseOut'
+                title: Response List Test Cases For Version Api V1 Orgs  Org Id  Dataset Versions  Dataset
+                  Version Id  Test Cases Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/evaluation-runs:
+    post:
+      tags:
+      - evaluations
+      summary: Queue an evaluation run
+      operationId: queue_run_api_v1_orgs__org_id__evaluation_runs_post
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluationRunIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationRunOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - evaluations
+      summary: Evaluation runs for this organization
+      operationId: list_runs_api_v1_orgs__org_id__evaluation_runs_get
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EvaluationRunOut'
+                title: Response List Runs Api V1 Orgs  Org Id  Evaluation Runs Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/evaluation-runs/{run_id}/activate:
+    post:
+      tags:
+      - evaluations
+      summary: Make a pending (recorded-adapter) run claimable, once its traces are pushed
+      operationId: activate_run_api_v1_orgs__org_id__evaluation_runs__run_id__activate_post
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Run Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationRunOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/evaluation-runs/{run_id}:
+    get:
+      tags:
+      - evaluations
+      summary: One evaluation run, with its per-test-case results
+      operationId: get_run_api_v1_orgs__org_id__evaluation_runs__run_id__get
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Run Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationRunDetailOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/evaluation-results/{result_id}/judge-call:
+    get:
+      tags:
+      - evaluations
+      summary: The raw judge request/response behind a judge-scored result (audited reveal, AC4)
+      operationId: get_judge_call_api_v1_orgs__org_id__evaluation_results__result_id__judge_call_get
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: result_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Result Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JudgeCallOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/traces:
+    post:
+      tags:
+      - traces
+      summary: Ingest an OpenTelemetry GenAI trace
+      operationId: ingest_trace_api_v1_orgs__org_id__traces_post
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TraceIngest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TraceOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/traces/{trace_id}:
+    get:
+      tags:
+      - traces
+      summary: One trace
+      operationId: get_trace_api_v1_orgs__org_id__traces__trace_id__get
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: trace_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Trace Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TraceOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/evaluation-runs/{run_id}/test-cases/{test_case_id}/trace:
+    get:
+      tags:
+      - traces
+      summary: The trace matching one evaluation result, by run and test case (AC6)
+      operationId: get_trace_for_run_and_case_api_v1_orgs__org_id__evaluation_runs__run_id__test_cases__test_case_id__trace_get
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Run Id
+      - name: test_case_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Test Case Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TraceOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/benchmarks/compare:
+    get:
+      tags:
+      - benchmarks
+      summary: Pairwise comparison between two evaluation runs (AC8)
+      operationId: compare_api_v1_orgs__org_id__benchmarks_compare_get
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: baseline_run_id
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Baseline Run Id
+      - name: candidate_run_id
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Candidate Run Id
+      - name: regression_threshold
+        in: query
+        required: false
+        schema:
+          type: number
+          maximum: 1
+          exclusiveMinimum: 0
+          default: 0.05
+          title: Regression Threshold
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BenchmarkComparisonOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orgs/{org_id}/benchmarks/trend:
+    get:
+      tags:
+      - benchmarks
+      summary: Each metric's mean score across a sequence of runs, oldest first (AC9)
+      operationId: trend_api_v1_orgs__org_id__benchmarks_trend_get
+      parameters:
+      - name: org_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Org Id
+      - name: run_ids
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+          title: Run Ids
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BenchmarkTrendOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    AgentIn:
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Name
+        adapter_type:
+          type: string
+          title: Adapter Type
+        provider:
+          type: string
+          enum:
+          - openai
+          - anthropic
+          - mock
+          - other
+          title: Provider
+          default: other
+      type: object
+      required:
+      - name
+      - adapter_type
+      title: AgentIn
+    AgentOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        organization_id:
+          type: string
+          format: uuid
+          title: Organization Id
+        name:
+          type: string
+          title: Name
+        adapter_type:
+          type: string
+          title: Adapter Type
+        provider:
+          type: string
+          title: Provider
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - organization_id
+      - name
+      - adapter_type
+      - provider
+      - created_at
+      title: AgentOut
+    AgentVersionIn:
+      properties:
+        label:
+          type: string
+          maxLength: 100
+          minLength: 1
+          title: Label
+        config:
+          additionalProperties: true
+          type: object
+          title: Config
+      type: object
+      required:
+      - label
+      title: AgentVersionIn
+      description: '``config`` is adapter-specific: an http adapter''s endpoint URL
+
+        (``{"endpoint_url": "..."}``, a python adapter''s import path
+
+        (``{"import_path": "pkg.module:callable"}``), a recorded adapter needs no config at
+
+        all, since its traces are supplied by the caller at evaluation time.'
+    AgentVersionOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        agent_id:
+          type: string
+          format: uuid
+          title: Agent Id
+        label:
+          type: string
+          title: Label
+        config:
+          additionalProperties: true
+          type: object
+          title: Config
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - agent_id
+      - label
+      - config
+      - created_at
+      title: AgentVersionOut
+    ApiKeyCreated:
+      properties:
+        key:
+          $ref: '#/components/schemas/ApiKeyOut'
+        plaintext:
+          type: string
+          title: Plaintext
+      type: object
+      required:
+      - key
+      - plaintext
+      title: ApiKeyCreated
+    ApiKeyIn:
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Name
+        role:
+          type: string
+          title: Role
+          default: member
+        expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expires At
+      type: object
+      required:
+      - name
+      title: ApiKeyIn
+    ApiKeyOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        organization_id:
+          type: string
+          format: uuid
+          title: Organization Id
+        name:
+          type: string
+          title: Name
+        prefix:
+          type: string
+          title: Prefix
+        display:
+          type: string
+          title: Display
+        role:
+          type: string
+          title: Role
+        expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expires At
+        revoked_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Revoked At
+        last_used_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Used At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - organization_id
+      - name
+      - prefix
+      - display
+      - role
+      - expires_at
+      - revoked_at
+      - last_used_at
+      - created_at
+      title: ApiKeyOut
+    AuditLogOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        at:
+          type: string
+          format: date-time
+          title: At
+        organization_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Organization Id
+        actor_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Actor Id
+        actor_email:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Actor Email
+        action:
+          type: string
+          title: Action
+        target_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Target Type
+        target_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Target Id
+        details:
+          additionalProperties: true
+          type: object
+          title: Details
+        ip:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ip
+      type: object
+      required:
+      - id
+      - at
+      - organization_id
+      - actor_id
+      - actor_email
+      - action
+      - target_type
+      - target_id
+      - details
+      - ip
+      title: AuditLogOut
+    BenchmarkComparisonOut:
+      properties:
+        baseline_run_id:
+          type: string
+          format: uuid
+          title: Baseline Run Id
+        candidate_run_id:
+          type: string
+          format: uuid
+          title: Candidate Run Id
+        deltas:
+          items:
+            $ref: '#/components/schemas/BenchmarkDeltaOut'
+          type: array
+          title: Deltas
+        has_regression:
+          type: boolean
+          title: Has Regression
+      type: object
+      required:
+      - baseline_run_id
+      - candidate_run_id
+      - deltas
+      - has_regression
+      title: BenchmarkComparisonOut
+    BenchmarkDeltaOut:
+      properties:
+        metric_id:
+          type: string
+          title: Metric Id
+        baseline_mean:
+          type: number
+          title: Baseline Mean
+        candidate_mean:
+          type: number
+          title: Candidate Mean
+        delta:
+          type: number
+          title: Delta
+        is_regression:
+          type: boolean
+          title: Is Regression
+      type: object
+      required:
+      - metric_id
+      - baseline_mean
+      - candidate_mean
+      - delta
+      - is_regression
+      title: BenchmarkDeltaOut
+    BenchmarkTrendOut:
+      properties:
+        series:
+          additionalProperties:
+            items:
+              $ref: '#/components/schemas/BenchmarkTrendPointOut'
+            type: array
+          type: object
+          title: Series
+      type: object
+      required:
+      - series
+      title: BenchmarkTrendOut
+    BenchmarkTrendPointOut:
+      properties:
+        run_id:
+          type: string
+          format: uuid
+          title: Run Id
+        mean_score:
+          type: number
+          title: Mean Score
+      type: object
+      required:
+      - run_id
+      - mean_score
+      title: BenchmarkTrendPointOut
+    DatasetCreate:
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Name
+        test_cases:
+          items:
+            $ref: '#/components/schemas/TestCaseIn'
+          type: array
+          title: Test Cases
+      type: object
+      required:
+      - name
+      title: DatasetCreate
+    DatasetOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        organization_id:
+          type: string
+          format: uuid
+          title: Organization Id
+        name:
+          type: string
+          title: Name
+        current_version_id:
+          type: string
+          format: uuid
+          title: Current Version Id
+        current_version_number:
+          type: integer
+          title: Current Version Number
+        test_case_count:
+          type: integer
+          title: Test Case Count
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - organization_id
+      - name
+      - current_version_id
+      - current_version_number
+      - test_case_count
+      - created_at
+      title: DatasetOut
+    DatasetVersionOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        dataset_id:
+          type: string
+          format: uuid
+          title: Dataset Id
+        version_number:
+          type: integer
+          title: Version Number
+        test_case_count:
+          type: integer
+          title: Test Case Count
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - dataset_id
+      - version_number
+      - test_case_count
+      - created_at
+      title: DatasetVersionOut
+    DatasetVersionUpdate:
+      properties:
+        test_cases:
+          items:
+            $ref: '#/components/schemas/TestCaseIn'
+          type: array
+          minItems: 1
+          title: Test Cases
+      type: object
+      required:
+      - test_cases
+      title: DatasetVersionUpdate
+      description: 'Replacing a dataset version''s test cases creates a NEW version (AC10): past
+
+        evaluation runs keep their dataset_version_id reference, so this request can never
+
+        change what an already-completed run''s score means.'
+    EvaluationResultOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        test_case_id:
+          type: string
+          format: uuid
+          title: Test Case Id
+        trace_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Trace Id
+        metric_id:
+          type: string
+          title: Metric Id
+        method:
+          type: string
+          title: Method
+        score:
+          type: number
+          title: Score
+        passed:
+          type: boolean
+          title: Passed
+        reasoning:
+          type: string
+          title: Reasoning
+        rubric_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Rubric Version
+        judge_model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Judge Model
+        judge_provider:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Judge Provider
+        same_family_warning:
+          type: boolean
+          title: Same Family Warning
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - test_case_id
+      - trace_id
+      - metric_id
+      - method
+      - score
+      - passed
+      - reasoning
+      - rubric_version
+      - judge_model
+      - judge_provider
+      - same_family_warning
+      - created_at
+      title: EvaluationResultOut
+    EvaluationRunDetailOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        organization_id:
+          type: string
+          format: uuid
+          title: Organization Id
+        agent_version_id:
+          type: string
+          format: uuid
+          title: Agent Version Id
+        dataset_version_id:
+          type: string
+          format: uuid
+          title: Dataset Version Id
+        status:
+          type: string
+          title: Status
+        metric_ids:
+          items:
+            type: string
+          type: array
+          title: Metric Ids
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Started At
+        finished_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Finished At
+        error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        results:
+          items:
+            $ref: '#/components/schemas/EvaluationResultOut'
+          type: array
+          title: Results
+      type: object
+      required:
+      - id
+      - organization_id
+      - agent_version_id
+      - dataset_version_id
+      - status
+      - metric_ids
+      - started_at
+      - finished_at
+      - error
+      - created_at
+      title: EvaluationRunDetailOut
+    EvaluationRunIn:
+      properties:
+        agent_version_id:
+          type: string
+          format: uuid
+          title: Agent Version Id
+        dataset_version_id:
+          type: string
+          format: uuid
+          title: Dataset Version Id
+        metric_ids:
+          items:
+            type: string
+          type: array
+          minItems: 1
+          title: Metric Ids
+      type: object
+      required:
+      - agent_version_id
+      - dataset_version_id
+      - metric_ids
+      title: EvaluationRunIn
+    EvaluationRunOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        organization_id:
+          type: string
+          format: uuid
+          title: Organization Id
+        agent_version_id:
+          type: string
+          format: uuid
+          title: Agent Version Id
+        dataset_version_id:
+          type: string
+          format: uuid
+          title: Dataset Version Id
+        status:
+          type: string
+          title: Status
+        metric_ids:
+          items:
+            type: string
+          type: array
+          title: Metric Ids
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Started At
+        finished_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Finished At
+        error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - organization_id
+      - agent_version_id
+      - dataset_version_id
+      - status
+      - metric_ids
+      - started_at
+      - finished_at
+      - error
+      - created_at
+      title: EvaluationRunOut
+    ExpectedBehaviorIn:
+      properties:
+        description:
+          type: string
+          title: Description
+          default: ''
+        exact_match:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Exact Match
+        regex:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Regex
+        json_schema:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Json Schema
+        required_tool_calls:
+          items:
+            type: string
+          type: array
+          title: Required Tool Calls
+        forbidden_tool_calls:
+          items:
+            type: string
+          type: array
+          title: Forbidden Tool Calls
+      type: object
+      title: ExpectedBehaviorIn
+      description: 'Matches evaluators.schema.ExpectedBehavior; a test case author sets only the
+
+        fields that apply to this case, the rest stay unset and contribute no check.'
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    JudgeCallOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        prompt:
+          type: string
+          title: Prompt
+        raw_response:
+          type: string
+          title: Raw Response
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - prompt
+      - raw_response
+      - created_at
+      title: JudgeCallOut
+      description: 'The raw request/response an evaluation result''s judge-based metric produced,
+
+        kept behind an explicit reveal endpoint rather than inlined into every result
+
+        listing, the same "audited reveal" posture the sibling projects in this program use
+
+        for anything sensitive-by-volume (AC4).'
+    LoginRequest:
+      properties:
+        email:
+          type: string
+          maxLength: 320
+          pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          title: Email
+        password:
+          type: string
+          title: Password
+      type: object
+      required:
+      - email
+      - password
+      title: LoginRequest
+    MemberInvite:
+      properties:
+        email:
+          type: string
+          maxLength: 320
+          pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          title: Email
+        role:
+          type: string
+          title: Role
+          default: member
+      type: object
+      required:
+      - email
+      title: MemberInvite
+    MemberRoleUpdate:
+      properties:
+        role:
+          type: string
+          title: Role
+      type: object
+      required:
+      - role
+      title: MemberRoleUpdate
+    MembershipOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        user_id:
+          type: string
+          format: uuid
+          title: User Id
+        user_email:
+          type: string
+          title: User Email
+        user_name:
+          type: string
+          title: User Name
+        role:
+          type: string
+          title: Role
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - user_id
+      - user_email
+      - user_name
+      - role
+      - created_at
+      title: MembershipOut
+    Message:
+      properties:
+        ok:
+          type: boolean
+          title: Ok
+          default: true
+        message:
+          type: string
+          title: Message
+          default: ''
+      type: object
+      title: Message
+    OrganizationCreate:
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Name
+      type: object
+      required:
+      - name
+      title: OrganizationCreate
+    OrganizationOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        slug:
+          type: string
+          title: Slug
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        role:
+          type: string
+          title: Role
+      type: object
+      required:
+      - id
+      - name
+      - slug
+      - created_at
+      - role
+      title: OrganizationOut
+    PasswordChange:
+      properties:
+        current_password:
+          type: string
+          title: Current Password
+        new_password:
+          type: string
+          title: New Password
+      type: object
+      required:
+      - current_password
+      - new_password
+      title: PasswordChange
+    SessionOut:
+      properties:
+        user:
+          $ref: '#/components/schemas/UserOut'
+        session_token:
+          type: string
+          title: Session Token
+        expires_in_s:
+          type: integer
+          title: Expires In S
+      type: object
+      required:
+      - user
+      - session_token
+      - expires_in_s
+      title: SessionOut
+    SpanIn:
+      properties:
+        otel_span_id:
+          type: string
+          maxLength: 16
+          minLength: 1
+          title: Otel Span Id
+        parent_otel_span_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Parent Otel Span Id
+        name:
+          type: string
+          title: Name
+        gen_ai_operation_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Gen Ai Operation Name
+        started_at:
+          type: string
+          format: date-time
+          title: Started At
+        ended_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Ended At
+        status:
+          type: string
+          title: Status
+          default: ok
+        attributes:
+          additionalProperties: true
+          type: object
+          title: Attributes
+      type: object
+      required:
+      - otel_span_id
+      - name
+      - started_at
+      title: SpanIn
+    SpanOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        otel_span_id:
+          type: string
+          title: Otel Span Id
+        parent_otel_span_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Parent Otel Span Id
+        name:
+          type: string
+          title: Name
+        gen_ai_operation_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Gen Ai Operation Name
+        started_at:
+          type: string
+          format: date-time
+          title: Started At
+        ended_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Ended At
+        status:
+          type: string
+          title: Status
+        attributes:
+          additionalProperties: true
+          type: object
+          title: Attributes
+      type: object
+      required:
+      - id
+      - otel_span_id
+      - parent_otel_span_id
+      - name
+      - gen_ai_operation_name
+      - started_at
+      - ended_at
+      - status
+      - attributes
+      title: SpanOut
+    TestCaseIn:
+      properties:
+        input:
+          additionalProperties: true
+          type: object
+          title: Input
+        expected_behavior:
+          $ref: '#/components/schemas/ExpectedBehaviorIn'
+        tags:
+          items:
+            type: string
+          type: array
+          title: Tags
+      type: object
+      title: TestCaseIn
+    TestCaseOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        input:
+          additionalProperties: true
+          type: object
+          title: Input
+        expected_behavior:
+          additionalProperties: true
+          type: object
+          title: Expected Behavior
+        tags:
+          items:
+            type: string
+          type: array
+          title: Tags
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - input
+      - expected_behavior
+      - tags
+      - created_at
+      title: TestCaseOut
+    TraceIngest:
+      properties:
+        otel_trace_id:
+          type: string
+          maxLength: 32
+          minLength: 32
+          title: Otel Trace Id
+        evaluation_run_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Evaluation Run Id
+        test_case_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Test Case Id
+        spans:
+          items:
+            $ref: '#/components/schemas/SpanIn'
+          type: array
+          title: Spans
+      type: object
+      required:
+      - otel_trace_id
+      title: TraceIngest
+      description: 'A trace as any OpenTelemetry-compatible exporter would send it: a real
+
+        ``otel_trace_id`` (32 hex chars) plus every span, never an AgentEval-invented id.'
+    TraceOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        organization_id:
+          type: string
+          format: uuid
+          title: Organization Id
+        otel_trace_id:
+          type: string
+          title: Otel Trace Id
+        evaluation_run_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Evaluation Run Id
+        test_case_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Test Case Id
+        spans:
+          items:
+            $ref: '#/components/schemas/SpanOut'
+          type: array
+          title: Spans
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - organization_id
+      - otel_trace_id
+      - evaluation_run_id
+      - test_case_id
+      - spans
+      - created_at
+      title: TraceOut
+    UserOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        email:
+          type: string
+          title: Email
+        name:
+          type: string
+          title: Name
+        disabled:
+          type: boolean
+          title: Disabled
+        last_login_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Login At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - email
+      - name
+      - disabled
+      - last_login_at
+      - created_at
+      title: UserOut
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+servers:
+- url: http://localhost:5730
+  description: Local (make up)
