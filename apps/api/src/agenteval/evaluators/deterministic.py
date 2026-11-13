@@ -92,6 +92,20 @@ DETERMINISTIC_CHECKS = (
     forbidden_tool_called,
 )
 
+# Every built-in deterministic check's metric_id, matching each function's own _result()
+# call above exactly: the evaluations domain uses this to tell a built-in deterministic
+# metric apart from a judge metric or a custom one requested by id, with no need to
+# import the check functions themselves just to ask "is this one of ours."
+DETERMINISTIC_CHECKS_BY_ID = frozenset(
+    {
+        "exact_match",
+        "regex_match",
+        "json_schema_valid",
+        "required_tool_called",
+        "forbidden_tool_called",
+    }
+)
+
 
 def run_deterministic_checks(case: EvaluationCase) -> list[MetricResult]:
     """Every deterministic check that applies to this case (one whose expected_behavior

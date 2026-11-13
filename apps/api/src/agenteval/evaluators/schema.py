@@ -65,6 +65,7 @@ class MetricResult:
     rubric_version: str | None = None
     judge_model: str | None = None
     judge_provider: ProviderFamily | None = None
+    judge_prompt: str | None = None
     raw_judge_response: str | None = None
     same_family_warning: bool = False
 

@@ -1,11 +1,6 @@
 """The evaluation worker: claims queued evaluation runs (Postgres, ``FOR UPDATE SKIP
-LOCKED``) and runs them. Any number of worker processes can run this loop concurrently.
-
-This is a skeleton: the real claim-and-run logic (claiming an EvaluationRun row, invoking
-the registered agent through its adapter, running deterministic and judge-based metrics,
-writing EvaluationResult rows) is the evaluations domain's own service layer, a later
-phase. This module exists now so ``agenteval worker`` is a real, runnable process from
-the start, even before there is anything in the queue for it to claim.
+LOCKED``) and runs them. Any number of worker processes can run this loop concurrently;
+``claim_next_run``'s row lock is what keeps two of them from ever claiming the same run.
 """
 
 from __future__ import annotations
@@ -22,6 +17,8 @@ from agenteval.core.container import Container
 from agenteval.core.db import import_all_models
 from agenteval.core.logs import configure_logging
 from agenteval.core.tracing import configure_tracing
+from agenteval.evaluations.models import EvaluationRun
+from agenteval.evaluations.service import claim_next_run, run_evaluation
 
 import_all_models()  # every domain's models must be registered before any cross-table
 # foreign key is flushed; relying on whichever routers happened to import them is
@@ -36,10 +33,24 @@ IDLE_POLL_S = 2.0
 async def _poll_once(container: Container, worker_id: str) -> bool:
     """Claim and run at most one evaluation run. Returns True if one was claimed (so the
     caller polls again immediately instead of sleeping), False if the queue was empty.
-    Until the evaluations domain's own claim_next_run exists, this always returns False:
-    an idle worker, not a crashing one."""
-    del container, worker_id  # unused until the evaluations domain's claim exists
-    return False
+    Claim and run use separate transactions (the claim commits quickly so the row lock
+    releases fast; the run itself can take a while), the same pattern secretguard's
+    own worker uses."""
+    async with container.db.sessionmaker() as session:
+        run = await claim_next_run(session, worker_id)
+        if run is None:
+            return False
+        await session.commit()
+        run_id = run.id
+
+    async with container.db.sessionmaker() as session:
+        run = await session.get(EvaluationRun, run_id)
+        if run is None:
+            return True
+        log.info("evaluation_run.started", extra={"run_id": str(run.id)})
+        await run_evaluation(session, container.settings, container.http, run)
+        log.info("evaluation_run.finished", extra={"run_id": str(run.id), "status": run.status})
+    return True
 
 
 async def main(settings: Settings | None = None) -> None:

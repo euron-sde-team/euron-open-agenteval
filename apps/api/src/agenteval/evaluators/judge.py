@@ -94,13 +94,14 @@ _RUBRICS: dict[str, str] = {
 }
 
 
-async def _run_judge_metric(
+async def _score_with_rubric(
     metric_id: str,
+    rubric: str,
+    rubric_version: str,
     case: EvaluationCase,
     judge: JudgeProvider,
     judge_config: JudgeConfig,
 ) -> MetricResult:
-    rubric = _RUBRICS[metric_id]
     prompt = _rubric_prompt(metric_id, rubric, case)
     model, raw = await judge.complete(prompt, model=judge_config.model)
     score, reasoning = _parse_judge_response(raw)
@@ -111,12 +112,40 @@ async def _run_judge_metric(
         score=score,
         passed=score >= 0.5,
         reasoning=reasoning,
-        rubric_version=RUBRIC_VERSION,
+        rubric_version=rubric_version,
         judge_model=model,
         judge_provider=judge_config.provider,
+        judge_prompt=prompt,
         raw_judge_response=raw,
         same_family_warning=same_family,
     )
+
+
+async def _run_judge_metric(
+    metric_id: str,
+    case: EvaluationCase,
+    judge: JudgeProvider,
+    judge_config: JudgeConfig,
+) -> MetricResult:
+    return await _score_with_rubric(
+        metric_id, _RUBRICS[metric_id], RUBRIC_VERSION, case, judge, judge_config
+    )
+
+
+async def run_custom_judge_metric(
+    metric_id: str,
+    rubric: str,
+    rubric_version: str,
+    case: EvaluationCase,
+    judge: JudgeProvider,
+    judge_config: JudgeConfig,
+) -> MetricResult:
+    """A user-registered rubric-only custom evaluator (AC11): the exact same scoring
+    path as a built-in judge metric, with the caller's own rubric text and version
+    instead of one of the fixed ones in ``_RUBRICS``. Picked up by the next run with no
+    restart, since the rubric is read from the metrics table at run time, never baked
+    into a deployed constant."""
+    return await _score_with_rubric(metric_id, rubric, rubric_version, case, judge, judge_config)
 
 
 JudgeMetricFn = Callable[[EvaluationCase, JudgeProvider, JudgeConfig], Awaitable[MetricResult]]
