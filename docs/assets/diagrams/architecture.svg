@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="t d">
+  <title id="t">AgentEval architecture</title>
+  <desc id="d">The Python SDK and the dashboard call the admin API, which uses Postgres for agents, datasets, evaluation runs, results and traces, and Redis for run progress. A worker claims queued runs, invokes the registered agent through its adapter, captures an OpenTelemetry trace, runs deterministic checks first and judge based metrics second against a judge model or the mock AI/LLM service, writes one result per test case per metric, and the benchmark engine computes a delta and regression flag between any two runs.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#6b7280"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#6d5bf0"/></marker>
+    <filter id="s" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#15112b" flood-opacity="0.10"/></filter>
+  </defs>
+  <rect width="1200" height="520" rx="16" fill="#f6f5fb"/>
+  <g font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" fill="#1c1a2e">
+
+    <!-- callers -->
+    <text x="40" y="44" font-size="12" font-weight="600" fill="#6b7280" letter-spacing="1">CALLERS</text>
+    <g filter="url(#s)">
+      <rect x="40" y="62" width="200" height="64" rx="12" fill="#fff"/>
+      <rect x="40" y="142" width="200" height="64" rx="12" fill="#fff"/>
+    </g>
+    <text x="60" y="90" font-size="15" font-weight="600">Python SDK</text>
+    <text x="60" y="110" font-size="12" fill="#6b7280">evaluator.evaluate(...)</text>
+    <text x="60" y="170" font-size="15" font-weight="600">Dashboard</text>
+    <text x="60" y="190" font-size="12" fill="#6b7280">Next.js 15</text>
+
+    <!-- api -->
+    <g filter="url(#s)">
+      <rect x="320" y="90" width="220" height="100" rx="14" fill="#fff"/>
+    </g>
+    <text x="340" y="126" font-size="16" font-weight="650">api</text>
+    <text x="340" y="148" font-size="12" fill="#6b7280">FastAPI, /api/v1</text>
+    <text x="340" y="166" font-size="12" fill="#6b7280">auth, orgs, agents,</text>
+    <text x="340" y="182" font-size="12" fill="#6b7280">datasets, evaluations</text>
+
+    <path d="M240 94 L320 120" stroke="#6b7280" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+    <path d="M240 174 L320 160" stroke="#6b7280" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+
+    <!-- data -->
+    <text x="600" y="44" font-size="12" font-weight="600" fill="#6b7280" letter-spacing="1">STORAGE</text>
+    <g filter="url(#s)">
+      <rect x="600" y="62" width="210" height="60" rx="12" fill="#fff"/>
+      <rect x="600" y="138" width="210" height="60" rx="12" fill="#fff"/>
+    </g>
+    <text x="620" y="88" font-size="14" font-weight="600">PostgreSQL 16</text>
+    <text x="620" y="106" font-size="11" fill="#6b7280">agents, datasets, runs, results, spans</text>
+    <text x="620" y="164" font-size="14" font-weight="600">Redis 7</text>
+    <text x="620" y="182" font-size="11" fill="#6b7280">run progress, response cache</text>
+    <path d="M540 120 L600 92" stroke="#6b7280" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+    <path d="M540 150 L600 168" stroke="#6b7280" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+
+    <!-- worker -->
+    <g filter="url(#s)">
+      <rect x="320" y="270" width="220" height="80" rx="14" fill="#efebff"/>
+    </g>
+    <text x="340" y="300" font-size="16" font-weight="650">worker</text>
+    <text x="340" y="320" font-size="12" fill="#5b5480">claims queued runs</text>
+    <text x="340" y="338" font-size="12" fill="#5b5480">FOR UPDATE SKIP LOCKED</text>
+    <path d="M430 190 L430 270" stroke="#6b7280" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+
+    <!-- evaluator engine -->
+    <g filter="url(#s)">
+      <rect x="40" y="270" width="220" height="110" rx="14" fill="#fff"/>
+    </g>
+    <text x="60" y="298" font-size="15" font-weight="650">evaluator engine</text>
+    <text x="60" y="320" font-size="12" fill="#6b7280">deterministic checks</text>
+    <text x="60" y="338" font-size="12" fill="#6b7280">(zero model calls)</text>
+    <text x="60" y="356" font-size="12" fill="#6b7280">then judge based metrics</text>
+    <path d="M320 320 L260 320" stroke="#6d5bf0" stroke-width="1.8" fill="none" marker-end="url(#g)"/>
+
+    <!-- judge provider -->
+    <g filter="url(#s)">
+      <rect x="40" y="410" width="220" height="80" rx="14" fill="#fff"/>
+    </g>
+    <text x="60" y="438" font-size="14" font-weight="600">judge model provider</text>
+    <text x="60" y="458" font-size="12" fill="#6b7280">or the mock AI/LLM service</text>
+    <text x="60" y="476" font-size="11" fill="#6b7280">cross family by default</text>
+    <path d="M150 380 L150 410" stroke="#6b7280" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+
+    <!-- benchmark engine -->
+    <g filter="url(#s)">
+      <rect x="320" y="410" width="220" height="80" rx="14" fill="#fff"/>
+    </g>
+    <text x="340" y="438" font-size="14" font-weight="600">benchmark engine</text>
+    <text x="340" y="458" font-size="12" fill="#6b7280">per metric delta</text>
+    <text x="340" y="476" font-size="11" fill="#6b7280">+ regression threshold</text>
+    <path d="M430 350 L430 410" stroke="#6b7280" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+
+    <!-- traces back to api -->
+    <path d="M540 310 Q 870 310 870 190" stroke="#6d5bf0" stroke-width="1.8" fill="none" marker-end="url(#g)" stroke-dasharray="5 4"/>
+    <text x="760" y="296" font-size="11" fill="#6d5bf0">OTel trace per invocation</text>
+
+    <!-- otlp -->
+    <g filter="url(#s)">
+      <rect x="880" y="90" width="220" height="60" rx="12" fill="#fff"/>
+    </g>
+    <text x="900" y="116" font-size="14" font-weight="600">Any OTel exporter</text>
+    <text x="900" y="134" font-size="11" fill="#6b7280">OTLP ingestion, no Euron SDK needed</text>
+    <path d="M880 120 L540 130" stroke="#6b7280" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+  </g>
+</svg>

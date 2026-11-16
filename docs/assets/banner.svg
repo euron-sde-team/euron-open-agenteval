@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320" role="img" aria-labelledby="t d">
+  <title id="t">Euron Open AgentEval</title>
+  <desc id="d">Score how well an AI agent completed a task, trace how it got there, and track whether a new version made things better or worse</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#110f1f"/>
+      <stop offset="1" stop-color="#17132a"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a394ff"/>
+      <stop offset="1" stop-color="#6d5bf0"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#a394ff" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#a394ff" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#ffffff" stroke-opacity="0.035"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="320" rx="16" fill="url(#bg)"/>
+  <rect width="1280" height="320" rx="16" fill="url(#grid)"/>
+
+  <g font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif">
+    <text x="72" y="140" fill="#f2effe" font-size="54" font-weight="650" letter-spacing="-1.2">Euron Open AgentEval</text>
+    <text x="74" y="186" fill="#a9a2c4" font-size="22" font-weight="400">Test it. Trust the diff.</text>
+    <text x="74" y="246" font-family="JetBrains Mono, SFMono-Regular, Menlo, monospace" font-size="15" fill="#756e96" xml:space="preserve">deterministic checks<tspan fill="#2a2648">  /  </tspan>judge scored<tspan fill="#2a2648">  /  </tspan>OTel traces<tspan fill="#2a2648">  /  </tspan>benchmarks</text>
+  </g>
+
+  <!-- A run is scored per metric and compared against the baseline: one regression, one improvement -->
+  <g transform="translate(830 48)" font-family="JetBrains Mono, SFMono-Regular, Menlo, monospace" font-size="12">
+    <circle cx="190" cy="112" r="130" fill="url(#halo)"/>
+    <rect x="0" y="0" width="380" height="224" rx="14" fill="#1a1630" stroke="#2f2a52" stroke-width="1"/>
+    <text x="18" y="30" fill="#c9c3ea" font-size="13" font-weight="600">support-agent v3 vs v2</text>
+    <rect x="296" y="16" width="66" height="22" rx="11" fill="#3a1a28"/>
+    <text x="329" y="31" fill="#ff8fa3" font-size="11" text-anchor="middle">Regression</text>
+
+    <text x="18" y="70" fill="#9089b8">exact_match</text>
+    <text x="362" y="70" fill="#ff8fa3" text-anchor="end" font-weight="600">1.00 to 0.00</text>
+    <rect x="18" y="82" width="344" height="6" rx="3" fill="#241f3f"/>
+    <rect x="18" y="82" width="0" height="6" rx="3" fill="#ff8fa3"/>
+
+    <text x="18" y="118" fill="#9089b8">forbidden_tool_called</text>
+    <text x="362" y="118" fill="#7ee2a8" text-anchor="end" font-weight="600">0.00 to 1.00</text>
+    <rect x="18" y="130" width="344" height="6" rx="3" fill="#241f3f"/>
+    <rect x="18" y="130" width="344" height="6" rx="3" fill="#7ee2a8"/>
+
+    <text x="18" y="166" fill="#9089b8">accuracy</text>
+    <text x="362" y="166" fill="#7a7398" text-anchor="end">0.90 to 0.90</text>
+    <rect x="18" y="178" width="344" height="6" rx="3" fill="#241f3f"/>
+    <rect x="18" y="178" width="310" height="6" rx="3" fill="#584f82"/>
+
+    <text x="18" y="206" fill="#6f6890" font-size="11">Every score links to the real trace that produced it.</text>
+  </g>
+
+  <circle cx="170" cy="112" r="14" fill="url(#mark)" opacity="0.9"/>
+</svg>
